@@ -4,7 +4,10 @@ output:
   html_document:
     keep_md: true
 ---
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+```
 
 ## Loading and preprocessing the data
 
@@ -70,10 +73,112 @@ I love it when median and mean are that close together.
 
 ## What is the average daily activity pattern?
 
+So what does the average daily pattern look like? First, let's make a new
+dataset that aggregates the average number of steps per 5 minute interval:
 
+```{r pattern aggregate}
+daily_steps<-setNames(aggregate(
+            act_clean$steps, 
+            by = list(act_clean$interval), 
+            FUN="mean"
+            ), 
+      c("interval","mean_steps"))
+
+head(daily_steps)
+```
+
+Great. Now let's plot that!
+
+```{r daily avg steps}
+ggplot(daily_steps,aes(interval,mean_steps))+
+      geom_line(color = "sky blue",size=1)+
+      theme_bw()
+```
+
+We can start to see a pretty clear pattern. Looks like the test subject(s) tend
+to take a morning walk of some kind. 
 
 ## Imputing missing values
 
+Remeber how earlier we said there were a bunch of NAs in our 'steps' data? 
+Well, there are. In fact, there are this many:
+```{r}
+sum(is.na(activity$steps))
+```
 
+I wonder if ignoring all of those NAs has distorted my data to some degree. So 
+let's do something about them and see what happens:
+
+```{r imputing}
+act2<-activity
+act2$steps[is.na(act2$steps)]<-mean(act2$steps,na.rm = TRUE)
+summary(act2$steps)
+```
+
+Great, with no NAs left in my new 'act2' dataset, let's look at how the data may
+have changed.
+
+```{r data comparison}
+daily2<-setNames(
+      aggregate(
+            act2$steps, 
+            by = list(act2$date), 
+            FUN=sum
+            ), 
+      c("Date","Steps"))
+
+qplot(daily2$Steps,geom="histogram",binwidth=2000)
+
+mean(daily2$Steps)
+median(daily2$Steps)
+
+```
+
+So, we can see that the shape of the histogram has shifted a bit and that the 
+median value is much more clear. Now, the mean and median are identical, and 
+because of the way that I imputed the NAs, the new median and mean match the 
+original mean of the dataset.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+We'd like to see if there is a difference in weekdays vs weekends insofar as 
+daily activity goes. So first, we'll need to create a new variable that identifies
+if a day falls on a weekday or a weekend.
+
+```{r weekpart}
+act2$weekpart<-as.factor(
+      ifelse(
+            weekdays(act2$date) %in%
+                  c("Saturday","Sunday"),
+            "Weekend",
+            "Weekday"
+      )
+)
+```
+
+Then we can plot activity on weekend days vs weekdays and see what difference
+may exist.
+
+```{r weekpart visual}
+weekpart.daily.steps<-setNames(
+      aggregate(
+            act2$steps,by=list(act2$interval,act2$weekpart),
+            FUN="mean"
+      ),
+      c("interval","weekpart","meansteps")
+)
+
+ggplot(weekpart.daily.steps,aes(interval,meansteps))+
+      geom_line()+
+      ylab("Number of Steps")+
+      xlab("Interval")+
+      theme_bw()+
+      facet_wrap(~weekpart,nrow=2,ncol=1)
+      
+      
+```
+
+There's definitely less of a spike on the weekends in the early morning (maybe 
+we are missing a walk from the parking lot to the office building?) and more
+midday steps during the weekend, which may indicate our subject(s) have a more
+stationary desk job during the week.
