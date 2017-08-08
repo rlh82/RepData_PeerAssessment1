@@ -50,8 +50,8 @@ daily<-setNames(
             act_clean$steps,
             by = list(act_clean$date),
             FUN=sum
-            )
-      ,c("Date","Steps")
+            ),
+      c("Date","Steps")
       )
 ```
 
