@@ -71,6 +71,15 @@ median(daily$Steps)
 
 I love it when median and mean are that close together.
 
+
+And what interval has the highest average step count?
+
+```{r max steps}
+daily_steps[daily_steps$mean_steps==max(daily_steps$mean_steps),]
+```
+
+Looks like interval 835 wins with 206.1698 steps on average
+
 ## What is the average daily activity pattern?
 
 So what does the average daily pattern look like? First, let's make a new
