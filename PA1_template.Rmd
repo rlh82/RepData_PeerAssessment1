@@ -8,11 +8,65 @@ output:
 
 ## Loading and preprocessing the data
 
+As the instructions for this project indicate, this document does not need to include the code related to downloading the data. Instead, I'm going to assume you have [this data]("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip") saved in your working directory.
+
+### Unzip, Load, and Summarize
+
+The data for this project comes in a zip file, but we'll want to extract that in
+order to load it into R.
+
+```{r unzip,echo=TRUE}
+unzip("week2.zip")
+```
+
+This will drop activity.csv into your working directory, so next we'll load the 
+data into R:
+
+```{r load}
+activity<-read.csv("activity.csv",colClasses = c("integer","Date","integer"))
+```
+
+And we'll just want to take a peak at what we've got to work with
+
+```{r summary}
+summary(activity)
+```
+
+And of course, this lets me know that I've got a lot of NAs to deal with, but we
+will get to that later. For now, let's create another dataset where NA values 
+are all removed:
+
+```{r omit NAs}
+act_clean<-na.omit(activity)
+```
 
 
 ## What is mean total number of steps taken per day?
 
+First we need to aggregate total number of steps per day:
+```{r aggregate}
+daily<-setNames(
+      aggregate(
+            act_clean$steps,
+            by = list(act_clean$date),
+            FUN=sum
+            )
+      ,c("Date","Steps")
+      )
+```
 
+And then we'll create a histogram using ggplot2:
+```{r histogram}
+qplot(daily$Steps,geom="histogram",binwidth=2000)
+```
+
+I wonder what the mean and median steps are?
+```{r facts}
+mean(daily$Steps)
+median(daily$Steps)
+```
+
+I love it when median and mean are that close together.
 
 ## What is the average daily activity pattern?
 
